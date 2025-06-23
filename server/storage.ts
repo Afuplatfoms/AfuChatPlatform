@@ -372,11 +372,11 @@ export class DatabaseStorage implements IStorage {
       .groupBy(conversations.id)
       .having(sql`count(*) = 2`);
 
-    return conversation || undefined;
+    return conversation?.[0]?.conversations || undefined;
   }
 
   async getUserConversations(userId: number): Promise<Conversation[]> {
-    return await db
+    const results = await db
       .select()
       .from(conversations)
       .innerJoin(
@@ -385,6 +385,8 @@ export class DatabaseStorage implements IStorage {
       )
       .where(eq(conversationParticipants.userId, userId))
       .orderBy(desc(conversations.lastActivity));
+    
+    return results.map(r => r.conversations);
   }
 
   async sendMessage(message: InsertMessage): Promise<Message> {
@@ -416,7 +418,7 @@ export class DatabaseStorage implements IStorage {
   async createProduct(product: InsertProduct): Promise<Product> {
     const [newProduct] = await db
       .insert(products)
-      .values([product])
+      .values(product)
       .returning();
     return newProduct;
   }

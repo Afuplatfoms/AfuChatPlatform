@@ -25,10 +25,11 @@ export default function AuthPage() {
   });
 
   // Redirect if already logged in
-  if (user) {
-    setLocation("/");
-    return null;
-  }
+  useEffect(() => {
+    if (user) {
+      setLocation("/");
+    }
+  }, [user, setLocation]);
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
@@ -39,11 +40,6 @@ export default function AuthPage() {
     e.preventDefault();
     registerMutation.mutate(registerData);
   };
-
-  // Don't render anything if user is already logged in
-  if (user) {
-    return null;
-  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary/10 to-secondary/10 dark:from-dark-bg dark:to-dark-surface flex items-center justify-center p-4">
