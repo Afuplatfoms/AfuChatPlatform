@@ -67,11 +67,11 @@ export interface IStorage {
   searchUsers(query: string): Promise<User[]>;
   searchPosts(query: string): Promise<Post[]>;
   
-  sessionStore: session.SessionStore;
+  sessionStore: any;
 }
 
 export class DatabaseStorage implements IStorage {
-  sessionStore: session.SessionStore;
+  sessionStore: any;
 
   constructor() {
     this.sessionStore = new PostgresSessionStore({ 
@@ -319,30 +319,20 @@ export class DatabaseStorage implements IStorage {
 
   async getFollowers(userId: number): Promise<User[]> {
     return await db
-      .select({
-        id: users.id,
-        username: users.username,
-        displayName: users.displayName,
-        avatar: users.avatar,
-        isVerified: users.isVerified,
-      })
-      .from(follows)
-      .innerJoin(users, eq(follows.followerId, users.id))
-      .where(eq(follows.followingId, userId));
+      .select()
+      .from(users)
+      .innerJoin(follows, eq(follows.followerId, users.id))
+      .where(eq(follows.followingId, userId))
+      .then(results => results.map(r => r.users));
   }
 
   async getFollowing(userId: number): Promise<User[]> {
     return await db
-      .select({
-        id: users.id,
-        username: users.username,
-        displayName: users.displayName,
-        avatar: users.avatar,
-        isVerified: users.isVerified,
-      })
-      .from(follows)
-      .innerJoin(users, eq(follows.followingId, users.id))
-      .where(eq(follows.followerId, userId));
+      .select()
+      .from(users)
+      .innerJoin(follows, eq(follows.followingId, users.id))
+      .where(eq(follows.followerId, userId))
+      .then(results => results.map(r => r.users));
   }
 
   async createConversation(participants: number[]): Promise<Conversation> {
@@ -426,7 +416,7 @@ export class DatabaseStorage implements IStorage {
   async createProduct(product: InsertProduct): Promise<Product> {
     const [newProduct] = await db
       .insert(products)
-      .values(product)
+      .values([product])
       .returning();
     return newProduct;
   }

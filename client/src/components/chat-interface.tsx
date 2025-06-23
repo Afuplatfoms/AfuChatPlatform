@@ -6,8 +6,10 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { apiRequest } from "@/lib/queryClient";
-import { Send, Search, Edit, User } from "lucide-react";
+import { Send, Search, Edit, User, MessageCircle, Phone, Video, MoreVertical, Smile, Paperclip, Mic } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 
 export default function ChatInterface() {
@@ -15,10 +17,12 @@ export default function ChatInterface() {
   const [selectedConversation, setSelectedConversation] = useState<number | null>(null);
   const [messageInput, setMessageInput] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
+  const [newChatOpen, setNewChatOpen] = useState(false);
+  const [onlineUsers] = useState([1, 2, 3]); // Mock online users
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const queryClient = useQueryClient();
 
-  const { sendMessage } = useWebSocket();
+  const { sendMessage, isConnected } = useWebSocket();
 
   const { data: conversations = [] } = useQuery({
     queryKey: ["/api/conversations"],
@@ -71,28 +75,48 @@ export default function ChatInterface() {
       <div className="h-full flex flex-col">
         {/* Chat Header */}
         <div className="px-4 py-3 border-b border-gray-200 dark:border-gray-700">
-          <div className="flex items-center space-x-3">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setSelectedConversation(null)}
-              className="mr-2"
-            >
-              ←
-            </Button>
-            <Avatar className="w-10 h-10">
-              <AvatarImage src={conversation?.otherUser?.avatar} />
-              <AvatarFallback>
-                <User size={20} />
-              </AvatarFallback>
-            </Avatar>
-            <div>
-              <p className="font-semibold text-sm">
-                {conversation?.otherUser?.displayName || "User"}
-              </p>
-              <p className="text-xs text-gray-500 dark:text-gray-400">
-                Active now
-              </p>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-3">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setSelectedConversation(null)}
+                className="mr-2"
+              >
+                ←
+              </Button>
+              <div className="relative">
+                <Avatar className="w-10 h-10">
+                  <AvatarImage src={conversation?.otherUser?.avatar} />
+                  <AvatarFallback>
+                    <User size={20} />
+                  </AvatarFallback>
+                </Avatar>
+                <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-green-500 border-2 border-white dark:border-dark-surface rounded-full"></div>
+              </div>
+              <div>
+                <p className="font-semibold text-sm flex items-center space-x-1">
+                  <span>{conversation?.otherUser?.displayName || "User"}</span>
+                  {conversation?.otherUser?.isVerified && (
+                    <Badge variant="secondary" className="text-primary text-xs">✓</Badge>
+                  )}
+                </p>
+                <p className="text-xs text-gray-500 dark:text-gray-400 flex items-center">
+                  <div className="w-2 h-2 bg-green-500 rounded-full mr-1"></div>
+                  Active now
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center space-x-2">
+              <Button variant="ghost" size="sm" className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full">
+                <Phone size={16} />
+              </Button>
+              <Button variant="ghost" size="sm" className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full">
+                <Video size={16} />
+              </Button>
+              <Button variant="ghost" size="sm" className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full">
+                <MoreVertical size={16} />
+              </Button>
             </div>
           </div>
         </div>
@@ -137,23 +161,56 @@ export default function ChatInterface() {
 
         {/* Message Input */}
         <form onSubmit={handleSendMessage} className="p-4 border-t border-gray-200 dark:border-gray-700">
-          <div className="flex space-x-2">
-            <Input
-              type="text"
-              placeholder="Type a message..."
-              value={messageInput}
-              onChange={(e) => setMessageInput(e.target.value)}
-              className="flex-1"
-            />
+          <div className="flex items-center space-x-2">
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full"
+            >
+              <Paperclip size={16} />
+            </Button>
+            <div className="flex-1 relative">
+              <Input
+                type="text"
+                placeholder="Type a message..."
+                value={messageInput}
+                onChange={(e) => setMessageInput(e.target.value)}
+                className="pr-20"
+              />
+              <div className="absolute right-2 top-1/2 transform -translate-y-1/2 flex space-x-1">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full"
+                >
+                  <Smile size={14} />
+                </Button>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full"
+                >
+                  <Mic size={14} />
+                </Button>
+              </div>
+            </div>
             <Button
               type="submit"
               size="sm"
-              className="bg-primary hover:bg-primary/90"
-              disabled={!messageInput.trim() || sendMessageMutation.isPending}
+              className="bg-primary hover:bg-primary/90 px-4"
+              disabled={!messageInput.trim() || sendMessageMutation.isPending || !isConnected}
             >
               <Send size={16} />
             </Button>
           </div>
+          {!isConnected && (
+            <div className="mt-2 text-xs text-red-500 text-center">
+              Connection lost. Trying to reconnect...
+            </div>
+          )}
         </form>
       </div>
     );
@@ -164,14 +221,68 @@ export default function ChatInterface() {
       {/* Messages Header */}
       <div className="px-4 py-3 border-b border-gray-200 dark:border-gray-700">
         <div className="flex items-center justify-between">
-          <h2 className="text-lg font-semibold">Messages</h2>
-          <Button
-            variant="ghost"
-            size="sm"
-            className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors"
-          >
-            <Edit className="w-5 h-5 text-gray-600 dark:text-gray-300" />
-          </Button>
+          <div>
+            <h2 className="text-lg font-semibold">Messages</h2>
+            <div className="flex items-center text-xs text-gray-500 dark:text-gray-400">
+              <div className={`w-2 h-2 rounded-full mr-1 ${isConnected ? 'bg-green-500' : 'bg-red-500'}`}></div>
+              {isConnected ? 'Connected' : 'Disconnected'}
+            </div>
+          </div>
+          <Dialog open={newChatOpen} onOpenChange={setNewChatOpen}>
+            <DialogTrigger asChild>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors"
+              >
+                <Edit className="w-5 h-5 text-gray-600 dark:text-gray-300" />
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-md">
+              <DialogHeader>
+                <DialogTitle>New Message</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4 py-4">
+                <div className="relative">
+                  <Input
+                    placeholder="Search users..."
+                    className="pl-10"
+                  />
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={16} />
+                </div>
+                <div className="space-y-2 max-h-60 overflow-y-auto">
+                  {/* Mock suggested users */}
+                  {[
+                    { id: 1, name: "Sarah Chen", username: "sarahc", online: true },
+                    { id: 2, name: "Mike Johnson", username: "mikej", online: false },
+                    { id: 3, name: "Emma Davis", username: "emmad", online: true },
+                  ].map((suggestedUser) => (
+                    <div key={suggestedUser.id} className="flex items-center justify-between p-2 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-lg cursor-pointer">
+                      <div className="flex items-center space-x-3">
+                        <div className="relative">
+                          <Avatar className="w-10 h-10">
+                            <AvatarFallback>
+                              {suggestedUser.name.split(" ").map(n => n[0]).join("")}
+                            </AvatarFallback>
+                          </Avatar>
+                          {suggestedUser.online && (
+                            <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-green-500 border-2 border-white dark:border-dark-surface rounded-full"></div>
+                          )}
+                        </div>
+                        <div>
+                          <p className="font-medium text-sm">{suggestedUser.name}</p>
+                          <p className="text-xs text-gray-500 dark:text-gray-400">@{suggestedUser.username}</p>
+                        </div>
+                      </div>
+                      <Button size="sm" variant="outline">
+                        Message
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </DialogContent>
+          </Dialog>
         </div>
       </div>
 

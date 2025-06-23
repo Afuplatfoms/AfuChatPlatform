@@ -15,7 +15,7 @@ export function registerRoutes(app: Express): Server {
 
   // Middleware to check authentication
   function requireAuth(req: any, res: any, next: any) {
-    if (!req.isAuthenticated()) {
+    if (!req.isAuthenticated() || !req.user) {
       return res.status(401).json({ message: "Authentication required" });
     }
     next();
@@ -26,7 +26,7 @@ export function registerRoutes(app: Express): Server {
     try {
       const postData = insertPostSchema.parse({
         ...req.body,
-        userId: req.user.id,
+        userId: req.user!.id,
       });
       
       const post = await storage.createPost(postData);
@@ -41,7 +41,7 @@ export function registerRoutes(app: Express): Server {
       const limit = parseInt(req.query.limit as string) || 20;
       const offset = parseInt(req.query.offset as string) || 0;
       
-      const posts = await storage.getFeedPosts(req.user.id, limit, offset);
+      const posts = await storage.getFeedPosts(req.user!.id, limit, offset);
       res.json(posts);
     } catch (error) {
       next(error);
@@ -64,7 +64,7 @@ export function registerRoutes(app: Express): Server {
   app.post("/api/posts/:postId/like", requireAuth, async (req, res, next) => {
     try {
       const postId = parseInt(req.params.postId);
-      const result = await storage.toggleLike(req.user.id, postId);
+      const result = await storage.toggleLike(req.user!.id, postId);
       res.json(result);
     } catch (error) {
       next(error);
@@ -78,7 +78,7 @@ export function registerRoutes(app: Express): Server {
       const commentData = insertCommentSchema.parse({
         ...req.body,
         postId,
-        userId: req.user.id,
+        userId: req.user!.id,
       });
       
       const comment = await storage.createComment(commentData);
@@ -106,7 +106,7 @@ export function registerRoutes(app: Express): Server {
       
       const storyData = insertStorySchema.parse({
         ...req.body,
-        userId: req.user.id,
+        userId: req.user!.id,
         expiresAt,
       });
       
@@ -119,7 +119,7 @@ export function registerRoutes(app: Express): Server {
 
   app.get("/api/stories", requireAuth, async (req, res, next) => {
     try {
-      const stories = await storage.getActiveStories(req.user.id);
+      const stories = await storage.getActiveStories(req.user!.id);
       res.json(stories);
     } catch (error) {
       next(error);
@@ -131,11 +131,11 @@ export function registerRoutes(app: Express): Server {
     try {
       const followingId = parseInt(req.params.userId);
       
-      if (followingId === req.user.id) {
+      if (followingId === req.user!.id) {
         return res.status(400).json({ message: "Cannot follow yourself" });
       }
       
-      const result = await storage.toggleFollow(req.user.id, followingId);
+      const result = await storage.toggleFollow(req.user!.id, followingId);
       res.json(result);
     } catch (error) {
       next(error);
@@ -165,7 +165,7 @@ export function registerRoutes(app: Express): Server {
   // Conversations and Messages routes
   app.get("/api/conversations", requireAuth, async (req, res, next) => {
     try {
-      const conversations = await storage.getUserConversations(req.user.id);
+      const conversations = await storage.getUserConversations(req.user!.id);
       res.json(conversations);
     } catch (error) {
       next(error);
@@ -177,10 +177,10 @@ export function registerRoutes(app: Express): Server {
       const { participantId } = req.body;
       
       // Check if conversation already exists
-      let conversation = await storage.getConversation(req.user.id, participantId);
+      let conversation = await storage.getConversation(req.user!.id, participantId);
       
       if (!conversation) {
-        conversation = await storage.createConversation([req.user.id, participantId]);
+        conversation = await storage.createConversation([req.user!.id, participantId]);
       }
       
       res.json(conversation);
@@ -204,7 +204,7 @@ export function registerRoutes(app: Express): Server {
     try {
       const productData = insertProductSchema.parse({
         ...req.body,
-        sellerId: req.user.id,
+        sellerId: req.user!.id,
       });
       
       const product = await storage.createProduct(productData);
@@ -259,7 +259,7 @@ export function registerRoutes(app: Express): Server {
   // Wallet routes
   app.get("/api/wallet/transactions", requireAuth, async (req, res, next) => {
     try {
-      const transactions = await storage.getWalletTransactions(req.user.id);
+      const transactions = await storage.getWalletTransactions(req.user!.id);
       res.json(transactions);
     } catch (error) {
       next(error);
@@ -269,7 +269,7 @@ export function registerRoutes(app: Express): Server {
   app.post("/api/wallet/deposit", requireAuth, async (req, res, next) => {
     try {
       const { amount } = req.body;
-      await storage.updateWalletBalance(req.user.id, amount, "deposit", "Wallet deposit");
+      await storage.updateWalletBalance(req.user!.id, amount, "deposit", "Wallet deposit");
       res.json({ success: true });
     } catch (error) {
       next(error);
