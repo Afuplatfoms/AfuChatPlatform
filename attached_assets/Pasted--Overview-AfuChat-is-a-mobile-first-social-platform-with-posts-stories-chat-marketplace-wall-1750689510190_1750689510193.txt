@@ -1,0 +1,230 @@
+🔍 Overview:
+
+AfuChat is a mobile-first social platform with posts, stories, chat, marketplace, wallet, premium features, and admin tools. This blueprint supports GitHub for code, Railway for backend + PostgreSQL, and Netlify for frontend. No Flutter or Firebase used.
+
+
+---
+
+🔧 Technologies:
+
+Layer	Tech Stack	Hosting
+
+Frontend	React + Tailwind CSS (PWA)	Netlify
+Backend	Node.js + Express + TypeScript	Railway
+DB	PostgreSQL + Drizzle ORM	Railway
+Auth	JWT (no Firebase)	Backend
+Realtime	WebSocket (ws)	Railway
+Media Upload	UploadThing / Cloudinary	External
+
+
+
+---
+
+📂 Repo Structure (Monorepo)
+
+afuchat/
+├── apps/
+│   ├── frontend/         # React Mobile UI
+│   └── backend/          # Express API + WebSocket
+├── packages/
+│   ├── shared/           # Drizzle schema, types
+│   └── config/           # Shared constants/env
+├── .env.example
+├── README.md
+
+
+---
+
+✨ Features by Module:
+
+👤 Users:
+
+Register/Login (JWT)
+
+Edit profile, username, bio, avatar
+
+Follow/Unfollow
+
+
+📅 Posts:
+
+Text, image
+
+Likes, comments
+
+Feed sorted by time
+
+
+📖 Stories:
+
+24h expiry
+
+Media + text + background
+
+Views tracking
+
+
+🗣️ Chat:
+
+One-on-one messaging
+
+Real-time (WebSocket)
+
+Conversation history
+
+
+🚚 Marketplace:
+
+Product listing by category
+
+Seller profiles
+
+Product search
+
+
+👥 Community:
+
+Follow/following
+
+User stats (followers, posts)
+
+
+⛔ Moderation:
+
+Reports on users/posts
+
+Admin panel: approve/reject
+
+User bans (temp/permanent)
+
+
+💳 Wallet:
+
+Deposit, withdraw, transfer
+
+Internal balance
+
+Used for boosts & ads
+
+
+✨ Premium:
+
+Subscription logic (via Stripe/Manual)
+
+Access to premium content
+
+Premium badge + expiration
+
+
+
+---
+
+📝 Backend Setup (apps/backend)
+
+RESTful API (Express)
+
+WebSocket chat server (ws)
+
+PostgreSQL via Drizzle ORM
+
+JWT auth middleware
+
+Upload config for UploadThing/Cloudinary
+
+Admin APIs for moderation tools
+
+
+Env Required:
+
+DATABASE_URL=
+JWT_SECRET=
+UPLOADTHING_SECRET=
+UPLOADTHING_APP_ID=
+CLOUDINARY_URL=
+
+
+---
+
+🌐 Frontend Setup (apps/frontend)
+
+React + Vite + Tailwind CSS
+
+Mobile-first layout
+
+Responsive nav, profile, stories
+
+Hooks for auth, feed, chat
+
+API calls to backend + socket connection
+
+PWA-ready (manifest + icons)
+
+
+Env Required:
+
+VITE_API_URL=https://backend.onrailway.app
+VITE_SOCKET_URL=wss://backend.onrailway.app
+
+
+---
+
+🎉 Deployment Checklist
+
+GitHub
+
+[ ] Push full monorepo
+
+
+Railway (Backend + DB)
+
+[ ] Add PostgreSQL plugin
+
+[ ] Add backend project (apps/backend)
+
+[ ] Set ENV vars
+
+[ ] Confirm WebSocket works
+
+
+Netlify (Frontend)
+
+[ ] Add frontend project (apps/frontend)
+
+[ ] Connect to GitHub
+
+[ ] Set build command: npm run build
+
+[ ] Output dir: dist/
+
+[ ] Set ENV vars (API + WebSocket URL)
+
+
+
+---
+
+✨ Optional Upgrades
+
+Group chats (add isGroup: true to conversations)
+
+Ad boosting: use wallet balance to promote posts
+
+Stripe or Paystack integration for real money top-up
+
+Story viewers tracking table
+
+Notifications via OneSignal
+
+
+
+---
+
+🌍 For Dev Handoff
+
+Provide full monorepo zip or GitHub link
+
+Include .env.example and config
+
+Reference this blueprint
+
+Ask dev to test all endpoints (CRUD + realtime)
+
