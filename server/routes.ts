@@ -13,6 +13,15 @@ export function registerRoutes(app: Express): Server {
   // Setup authentication routes
   setupAuth(app);
 
+  // Health check endpoint for deployment platforms
+  app.get("/api/health", (req, res) => {
+    res.status(200).json({ 
+      status: "healthy", 
+      timestamp: new Date().toISOString(),
+      uptime: process.uptime()
+    });
+  });
+
   // Middleware to check authentication
   function requireAuth(req: any, res: any, next: any) {
     if (!req.isAuthenticated() || !req.user) {
@@ -222,6 +231,55 @@ export function registerRoutes(app: Express): Server {
       
       const products = await storage.getProducts(category, limit, offset);
       res.json(products);
+    } catch (error) {
+      next(error);
+    }
+  });
+
+  // User profile routes
+  app.get("/api/users/:userId", async (req, res, next) => {
+    try {
+      const userId = parseInt(req.params.userId);
+      const user = await storage.getUser(userId);
+      
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      // Don't send sensitive info
+      const { password, ...userInfo } = user;
+      res.json(userInfo);
+    } catch (error) {
+      next(error);
+    }
+  });
+
+  app.patch("/api/user/profile", requireAuth, async (req, res, next) => {
+    try {
+      const updates = req.body;
+      const updatedUser = await storage.updateUser(req.user!.id, updates);
+      const { password, ...userInfo } = updatedUser;
+      res.json(userInfo);
+    } catch (error) {
+      next(error);
+    }
+  });
+
+  app.get("/api/users/:userId/followers", async (req, res, next) => {
+    try {
+      const userId = parseInt(req.params.userId);
+      const followers = await storage.getFollowers(userId);
+      res.json(followers);
+    } catch (error) {
+      next(error);
+    }
+  });
+
+  app.get("/api/users/:userId/following", async (req, res, next) => {
+    try {
+      const userId = parseInt(req.params.userId);
+      const following = await storage.getFollowing(userId);
+      res.json(following);
     } catch (error) {
       next(error);
     }

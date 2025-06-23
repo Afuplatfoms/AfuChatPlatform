@@ -112,11 +112,22 @@ AfuChat is a comprehensive social media platform built with a modern full-stack 
 - Database: Drizzle migrations applied automatically
 - Session storage: PostgreSQL-backed sessions
 
-### Deployment Configuration
-- **Target**: Replit autoscale deployment
-- **Port**: 5000 (configurable)
+### Deployment Options
+- **Railway**: Full-stack deployment with automatic builds
+- **Netlify**: Frontend deployment with Netlify functions
+- **Docker**: Containerized deployment for any platform
+- **Heroku**: Traditional PaaS deployment with Procfile
+- **Port**: 5000 (configurable via PORT environment variable)
 - **Environment**: Production NODE_ENV
 - **Assets**: Served from dist/public directory
+
+### Deployment Files Created
+- `railway.json`: Railway deployment configuration
+- `netlify.toml`: Netlify build and redirect configuration
+- `Dockerfile`: Container deployment setup
+- `Procfile`: Heroku deployment configuration
+- `.gitignore`: Git ignore patterns for deployment
+- `README.md`: Comprehensive deployment documentation
 
 ## Changelog
 
