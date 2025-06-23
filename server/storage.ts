@@ -372,7 +372,7 @@ export class DatabaseStorage implements IStorage {
       .groupBy(conversations.id)
       .having(sql`count(*) = 2`);
 
-    return conversation?.[0]?.conversations || undefined;
+    return conversation || undefined;
   }
 
   async getUserConversations(userId: number): Promise<Conversation[]> {
@@ -418,7 +418,7 @@ export class DatabaseStorage implements IStorage {
   async createProduct(product: InsertProduct): Promise<Product> {
     const [newProduct] = await db
       .insert(products)
-      .values(product)
+      .values([product])
       .returning();
     return newProduct;
   }

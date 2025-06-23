@@ -79,8 +79,13 @@ A comprehensive social media platform built with modern web technologies, featur
 
 ### Netlify (Frontend only)
 1. Connect repository to Netlify
-2. Build command: `npm run build:client`
-3. Publish directory: `dist/public`
+2. Build command: `npm run build:frontend`
+3. Publish directory: `dist`
+4. Set environment variables:
+   - `VITE_API_BASE_URL`: Your backend API URL (e.g., Railway deployment)
+   - `VITE_WS_HOST`: Your WebSocket host
+
+**Important**: For full functionality, deploy the backend separately on Railway or another platform and update the environment variables.
 
 ### Docker
 ```bash
